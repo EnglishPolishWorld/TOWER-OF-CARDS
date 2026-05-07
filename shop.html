@@ -1,33 +1,245 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>Shop - Tower of Cards</title> 
-    <link rel="stylesheet" href="css/shop.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Магазин — Tower of Relics</title>
+<link rel="stylesheet" href="main.css">
+<link rel="stylesheet" href="shop.css">
 </head>
 <body>
-    <div id="shopScreen">
-        <h1 class="shop-title">🏪 ТАВЕРНА</h1>
-        <div class="gold-display" id="shopGold">💰 Золото: 0</div>
-        <div class="shop-cards" id="shopCards">
-            <!-- Карты генерируются JS -->
-        </div>
-        <button class="next-btn" onclick="saveAndGoToBattle()">ПРОДОЛЖИТЬ ПУТЬ</button>
+
+<div id="shop-screen" class="page-enter">
+
+  <!-- ─── Top bar ─── -->
+  <div class="shop-topbar">
+    <div class="shop-topbar-left">
+      <button class="btn" onclick="goMenu()" style="font-size:10px;padding:7px 14px;">← Меню</button>
+      <div class="shop-logo gold-text">Tower of Relics</div>
+      <div class="shop-round-info">Раунд <span id="sh-round">1</span> · Магазин</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:20px;">
+      <div class="dps-strip" id="topbar-dps" style="font-size:11px;"></div>
+      <div class="shop-gold-display">
+        <span class="icon">🪙</span>
+        <span id="sh-gold">6</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Body ─── -->
+  <div class="shop-body">
+
+    <!-- Left: items for sale -->
+    <div class="shop-items-col">
+      <div class="shop-items-scroll">
+        <div class="section-lbl" style="margin-bottom:14px;">Доступные реликвии — клик чтобы купить</div>
+        <div class="shop-cards-grid" id="sh-cards"></div>
+      </div>
+
+      <div class="shop-controls">
+        <button class="btn" id="btn-reroll" onclick="reroll()">🎲 Перебросить (2 🪙)</button>
+        <button class="btn" id="btn-freeze" onclick="toggleFreeze()">❄️ Заморозить</button>
+        <button class="btn btn-gold" style="margin-left:auto;" onclick="goMenu()">🏰 В меню</button>
+      </div>
+
+      <div class="shop-msg-bar" id="sh-msg">Купи реликвии и размести их в башне. Затем иди в меню → Начать битву.</div>
     </div>
 
-    <script src="gameLogic.js"></script>
-    <script>
-        // Инициализация магазина при загрузке
-        window.onload = () => {
-            loadGame();
-            renderShop();
-            document.getElementById('shopGold').textContent = `💰 Золото: ${gameState.gold}`;
-        };
+    <!-- Right: tower preview -->
+    <div class="shop-tower-col">
+      <div class="shop-tower-header">
+        <div class="shop-tower-title">Твоя башня (6×6)</div>
+        <div class="slot-counter">Занято: <b id="sh-slots">0</b> / 36</div>
+      </div>
 
-        function saveAndGoToBattle() {
-            saveGame();
-            window.location.href = 'battle.html';
-        }
-    </script>
+      <div class="shop-inv-wrap">
+        <div class="shop-inv-grid" id="sh-inv"></div>
+      </div>
+
+      <div class="shop-syn-row" id="sh-syn"></div>
+
+      <div class="shop-tower-dps">
+        <div class="shop-dps-title">Характеристики башни</div>
+        <div class="dps-strip" id="sh-dps"></div>
+      </div>
+
+      <div class="sell-hint">Правая кнопка мыши на предмете — продать за 1 🪙</div>
+    </div>
+  </div>
+</div>
+
+<div id="tooltip"></div>
+
+<script src="game.js"></script>
+<script>
+// ─── State ───────────────────────────────────────────────────────
+let state = null;
+
+function init() {
+  const saved = loadState();
+  if (!saved) { navigate('main.html'); return; }
+  state = saved;
+  state.playerTower = hydrateTower(state.playerTower);
+  state.shop        = state.shop.length ? hydrateShop(state.shop) : rollShopItems([], false);
+  renderAll();
+}
+
+// ─── Render ──────────────────────────────────────────────────────
+function renderAll() {
+  document.getElementById('sh-round').textContent = state.round;
+  document.getElementById('sh-gold').textContent  = state.gold;
+  document.getElementById('sh-slots').textContent = usedSlots(state.playerTower);
+
+  renderCards();
+  renderTower();
+  renderDPSStrip(document.getElementById('sh-dps'), state.playerTower);
+  renderDPSStrip(document.getElementById('topbar-dps'), state.playerTower);
+
+  // Freeze btn state
+  const fb = document.getElementById('btn-freeze');
+  if (state.frozen) {
+    fb.textContent = '🔥 Разморозить';
+    fb.classList.add('freeze-active');
+  } else {
+    fb.textContent = '❄️ Заморозить';
+    fb.classList.remove('freeze-active');
+  }
+}
+
+function renderCards() {
+  const g = document.getElementById('sh-cards');
+  g.innerHTML = '';
+
+  state.shop.forEach((item, i) => {
+    const canAfford = state.gold >= item.cost;
+    const slot      = findFreeSlot(state.playerTower, item.size);
+    const hasFit    = !!slot;
+    const canBuy    = canAfford && hasFit && !item.sold;
+
+    const card = document.createElement('div');
+    card.className = [
+      'shop-card',
+      item.rarity === 'rare' ? 'rare' : '',
+      item.rarity === 'epic' ? 'epic' : '',
+      item.sold   ? 'sold' : '',
+      (!canBuy && !item.sold) ? 'locked' : '',
+    ].filter(Boolean).join(' ');
+
+    card.innerHTML = `
+      <span class="sc-emoji">${item.emoji}</span>
+      <div class="sc-name">${item.name}</div>
+      <div class="sc-stat">${item.stat}</div>
+      <div class="sc-cost">🪙 ${item.cost}</div>
+      <div class="sc-size-lbl">${item.size[0]}×${item.size[1]} клет.</div>
+      <div class="badge badge-${item.rarity}" style="margin-top:4px;">${item.rarity === 'common' ? 'Обычный' : item.rarity === 'rare' ? 'Редкий' : 'Эпический'}</div>
+      ${!hasFit && !item.sold ? '<div class="no-space-warn">⚠ Нет места</div>' : ''}
+      ${item.sold ? '<div class="sold-stamp">Продано</div>' : ''}
+    `;
+
+    if (canBuy) {
+      card.onclick = () => buyItem(i);
+    }
+
+    card.onmouseenter = e => showTooltip(e, item.name,
+      `${item.stat}  ·  ${item.desc}\nТэг: ${item.tag} · Размер: ${item.size[0]}×${item.size[1]}` +
+      (!hasFit && !item.sold ? '\n⚠ Нет свободных слотов' : '') +
+      (!canAfford && !item.sold ? '\n⚠ Недостаточно золота' : '')
+    );
+    card.onmouseleave = hideTooltip;
+
+    g.appendChild(card);
+  });
+}
+
+function renderTower() {
+  const inv = document.getElementById('sh-inv');
+  renderInvGrid(inv, state.playerTower, true, idx => {
+    sellItem(idx);
+  });
+  renderSynRow(document.getElementById('sh-syn'), state.playerTower);
+}
+
+// ─── Actions ─────────────────────────────────────────────────────
+function buyItem(i) {
+  const item = state.shop[i];
+  if (!item || item.sold || state.gold < item.cost) return;
+  const slot = findFreeSlot(state.playerTower, item.size);
+  if (!slot) { setMsg('⚠ Нет свободных слотов в башне!'); return; }
+
+  state.gold -= item.cost;
+
+  // Check for triple
+  const sameItems = state.playerTower.filter(p => p.item.id === item.id && !p.isTriple);
+  if (sameItems.length >= 2) {
+    // Remove those 2 and place tripled version
+    state.playerTower = state.playerTower.filter(p => !sameItems.includes(p));
+    const tripled = {
+      ...item,
+      dmg:   Math.round(item.dmg   * 1.9),
+      armor: Math.round(item.armor * 2),
+      heal:  Math.round(item.heal  * 1.5),
+    };
+    const tSlot = findFreeSlot(state.playerTower, item.size) || [0, 0];
+    state.playerTower.push({ item: tripled, col: tSlot[0], row: tSlot[1], count: 1, isTriple: true });
+    setMsg(`⭐ ТРОЙКА! ${item.emoji} ${item.name} стал Легендарным!`);
+  } else {
+    state.playerTower.push({ item, col: slot[0], row: slot[1], count: sameItems.length + 1, isTriple: false });
+    setMsg(`Куплено: ${item.emoji} ${item.name}`);
+  }
+
+  state.shop[i] = { ...item, sold: true };
+  persist();
+  renderAll();
+}
+
+function sellItem(idx) {
+  const p = state.playerTower[idx];
+  if (!p) return;
+  state.gold += 1;
+  setMsg(`Продано: ${p.item.emoji} ${p.item.name} за 1 🪙`);
+  state.playerTower.splice(idx, 1);
+  persist();
+  renderAll();
+}
+
+function reroll() {
+  if (state.gold < 2) { setMsg('⚠ Нужно 2 🪙 для переброса!'); return; }
+  state.gold -= 2;
+  state.frozen = false;
+  state.shop = rollShopItems([], false);
+  setMsg('Магазин обновлён.');
+  persist();
+  renderAll();
+}
+
+function toggleFreeze() {
+  state.frozen = !state.frozen;
+  setMsg(state.frozen ? '❄️ Товары заморожены до следующего раунда.' : '🔥 Заморозка снята.');
+  persist();
+  renderAll();
+}
+
+function setMsg(txt) {
+  document.getElementById('sh-msg').textContent = txt;
+}
+
+function goMenu() {
+  persist();
+  navigate('main.html');
+}
+
+function persist() {
+  const toSave = {
+    ...state,
+    playerTower: dehydrateTower(state.playerTower),
+    shop:        dehydrateShop(state.shop),
+    savedAt:     Date.now(),
+  };
+  saveState(toSave);
+}
+
+init();
+</script>
 </body>
 </html>

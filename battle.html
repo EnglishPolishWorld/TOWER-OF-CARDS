@@ -1,50 +1,322 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>Battle - Tower of Cards</title>
-    <link rel="stylesheet" href="css/battle.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Битва — Tower of Relics</title>
+<link rel="stylesheet" href="main.css">
+<link rel="stylesheet" href="battle.css">
 </head>
 <body>
-    <div id="battleScreen">
-        <div class="battle-header">
-            <div class="hp-bar-container">
-                <div class="hp-label">🛡️ Герой</div>
-                <div class="hp-bar"><div class="hp-fill player-hp" id="playerHpBar"></div></div> 
-                <div class="hp-text" id="playerHpText">100 / 100</div>
-            </div>
-            <div class="dps-counter">
-                <div class="dps-value" id="dpsValue">0</div>
-                <div class="dps-label">DPS</div>
-            </div>
-            <div class="hp-bar-container" style="align-items:flex-end">
-                <div class="hp-label">💀 Враг</div>
-                <div class="hp-bar"><div class="hp-fill enemy-hp" id="enemyHpBar"></div></div>
-                <div class="hp-text" id="enemyHpText">100 / 100</div>
-            </div>
-        </div>
 
-        <div class="battle-field">
-            <div class="backpack-panel">
-                <div class="backpack-title">🎒 Рюкзак</div>
-                <div class="backpack-grid" id="backpackGrid"></div>
-                <div id="synergyList"></div>
-            </div>
-            <div class="enemy-zone">
-                <div class="enemy-card-display">
-                    <div class="enemy-icon" id="enemyIcon">👹</div>
-                    <div class="enemy-name" id="enemyName">Гоблин</div>
-                </div>
-                <div class="battle-log" id="battleLog"></div>
-            </div>
-        </div>
+<div id="battle-screen" class="page-enter">
 
-        <div class="battle-controls">
-            <button class="battle-btn btn-start" id="startBtn" onclick="startBattle()">В БОЙ!</button>
-            <button class="battle-btn" onclick="location.href='main.html'">В МЕНЮ</button>
-        </div>
+  <!-- ─── Top bar ─── -->
+  <div class="battle-topbar">
+    <button class="bh-back btn" onclick="goMenu()">← Меню</button>
+    <div class="btb-logo gold-text">Tower of Relics</div>
+    <div class="btb-meta">
+      <div class="btb-stat">🏆 Победы <b id="b-wins">0</b></div>
+      <div class="btb-stat">💀 Поражения <b id="b-losses">0</b></div>
+      <div class="btb-round-badge">Раунд <span id="b-round">1</span></div>
     </div>
-    <!-- Скрипты лучше вынести в отдельный файл logic.js, но для примера оставим логику сохранения тут -->
-    <script src="gameLogic.js"></script>
+  </div>
+
+  <!-- ─── Arena ─── -->
+  <div class="battle-arena">
+
+    <!-- PLAYER TOWER -->
+    <div class="tower-col player-col" id="col-player">
+      <div class="tower-combatant">
+        <div class="tc-name">🏰 Страж Реликвий <span id="p-title">Твоя башня</span></div>
+        <div class="tc-hp-row">
+          <span class="tc-hp-num" id="p-hp-num">100 / 100</span>
+          <div class="hp-track" style="flex:1;"><div class="hp-fill player" id="p-bar" style="width:100%"></div></div>
+        </div>
+      </div>
+      <div class="tower-syns" id="p-syn"></div>
+
+      <!-- DPS panel for player -->
+      <div class="dps-panel" style="border-top:none;border-bottom:1px solid var(--brd-faint);padding:6px 0 8px;margin-bottom:10px;background:transparent;">
+        <div class="dps-strip" id="p-dps"></div>
+      </div>
+
+      <div class="section-lbl">Реликвии — 6×6 слотов</div>
+      <div class="tower-inv-wrap">
+        <div id="p-grid" style="height:100%;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(6,1fr);gap:3px;"></div>
+      </div>
+    </div>
+
+    <!-- VS divider -->
+    <div class="battle-vs">
+      <div class="vs-orb">⚔</div>
+      <div class="vs-label">VS</div>
+      <div class="vs-orb">💀</div>
+    </div>
+
+    <!-- ENEMY TOWER -->
+    <div class="tower-col" id="col-enemy">
+      <div class="tower-combatant">
+        <div class="tc-name">
+          <span class="enemy-label" id="e-name">???</span>
+          <span id="e-title" style="font-size:11px;color:var(--txt-ghost);font-style:italic;"></span>
+        </div>
+        <div class="tc-hp-row">
+          <div class="hp-track" style="flex:1;"><div class="hp-fill enemy" id="e-bar" style="width:100%"></div></div>
+          <span class="tc-hp-num enemy" id="e-hp-num">100 / 100</span>
+        </div>
+      </div>
+
+      <div style="height:28px;"></div>
+
+      <!-- DPS panel for enemy -->
+      <div class="dps-panel" style="border-top:none;border-bottom:1px solid var(--brd-faint);padding:6px 0 8px;margin-bottom:10px;background:transparent;">
+        <div class="dps-strip" id="e-dps"></div>
+      </div>
+
+      <div class="section-lbl">Реликвии противника</div>
+      <div class="tower-inv-wrap">
+        <div id="e-grid" style="height:100%;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(6,1fr);gap:3px;"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── Battle log ─── -->
+  <div class="battle-log" id="blog"></div>
+
+</div>
+
+<!-- ─── Result overlay ─── -->
+<div class="overlay" id="ov-result">
+  <div class="modal-box">
+    <div class="m-icon" id="r-icon">🏆</div>
+    <div class="m-title" id="r-title">Победа!</div>
+    <div class="m-sub" id="r-sub">Башня врага пала!</div>
+
+    <!-- Post-battle stats -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;text-align:left;margin-bottom:24px;padding:16px;background:var(--bg-raised);border-radius:var(--r-md);border:1px solid var(--brd-faint);">
+      <div class="stat-row" style="padding:4px 0;border:none;"><span class="stat-name" style="font-size:12px;">Нанесено</span><span class="stat-val" id="r-dealt" style="font-size:13px;">—</span></div>
+      <div class="stat-row" style="padding:4px 0;border:none;"><span class="stat-name" style="font-size:12px;">Получено</span><span class="stat-val red" id="r-taken" style="font-size:13px;">—</span></div>
+      <div class="stat-row" style="padding:4px 0;border:none;"><span class="stat-name" style="font-size:12px;">Вылечено</span><span class="stat-val green" id="r-healed" style="font-size:13px;">—</span></div>
+      <div class="stat-row" style="padding:4px 0;border:none;"><span class="stat-name" style="font-size:12px;">Награда</span><span class="stat-val" id="r-reward" style="font-size:13px;">—</span></div>
+    </div>
+
+    <button class="btn btn-gold btn-lg" onclick="goShop()">🛒 В магазин →</button>
+  </div>
+</div>
+
+<div id="tooltip"></div>
+
+<script src="game.js"></script>
+<script>
+// ─── State ───────────────────────────────────────────────────────
+let state = null;
+let inBattle = false;
+let battleDmgDealt = 0, battleDmgTaken = 0, battleHealed = 0;
+
+function init() {
+  const saved = loadState();
+  if (!saved || !saved.playerTower || !saved.playerTower.length) {
+    navigate('main.html');
+    return;
+  }
+  state = saved;
+  state.playerTower = hydrateTower(state.playerTower);
+  state.shop        = hydrateShop(state.shop || []);
+
+  document.getElementById('b-round').textContent   = state.round;
+  document.getElementById('b-wins').textContent    = state.wins;
+  document.getElementById('b-losses').textContent  = state.losses;
+
+  startBattle();
+}
+
+// ─── Build enemy tower ──────────────────────────────────────────
+function buildEnemyTower(enemyDef) {
+  let tower = [];
+  const itemIds = [...enemyDef.items];
+  if (state.round >= 4) itemIds.push('dragon');
+
+  itemIds.forEach(id => {
+    const item = ITEMS.find(x => x.id === id);
+    if (!item) return;
+    const slot = findFreeSlot(tower, item.size);
+    if (slot) tower.push({ item: { ...item }, col: slot[0], row: slot[1], count: 1, isTriple: false });
+  });
+  return tower;
+}
+
+// ─── Main battle loop ────────────────────────────────────────────
+async function startBattle() {
+  if (inBattle) return;
+  inBattle = true;
+  battleDmgDealt = 0; battleDmgTaken = 0; battleHealed = 0;
+  document.getElementById('battle-screen').classList.add('in-battle');
+
+  const enemyDef = ENEMIES[(state.round - 1) % ENEMIES.length];
+  document.getElementById('e-name').textContent  = enemyDef.name;
+  document.getElementById('e-title').textContent = enemyDef.title;
+
+  const eTower = buildEnemyTower(enemyDef);
+
+  // Render grids
+  renderInvGrid(document.getElementById('p-grid'), state.playerTower, false, null);
+  renderInvGrid(document.getElementById('e-grid'), eTower, false, null);
+  renderSynRow(document.getElementById('p-syn'), state.playerTower);
+
+  // DPS displays
+  renderDPSStrip(document.getElementById('p-dps'), state.playerTower);
+  renderDPSStrip(document.getElementById('e-dps'), eTower);
+
+  // Combat values
+  const pItems = applyBonuses(state.playerTower);
+  const eItems = eTower.map(p => ({ ...p.item, _dmg: p.item.dmg, _armor: p.item.armor, _heal: p.item.heal }));
+
+  const pTotalDmg   = pItems.reduce((s, i) => s + i._dmg,   0);
+  const eTotalDmg   = eItems.reduce((s, i) => s + i._dmg,   0);
+  const pArmor      = pItems.reduce((s, i) => s + i._armor,  0);
+  const eArmor      = eItems.reduce((s, i) => s + i._armor,  0);
+  const pHealItems  = pItems.filter(i => i._heal > 0);
+  const eHealItems  = eItems.filter(i => i._heal > 0);
+  const alchDouble  = state.playerTower.filter(p => p.item.tag === 'алхимик').length >= 2;
+
+  let pH = state.pHP, eH = enemyDef.hp + (state.round - 1) * 8;
+  const pMax = state.pMaxHP, eMax = eH;
+
+  updateHP(pH, pMax, eH, eMax);
+  bLog(`── ⚔️ Раунд ${state.round}: ${enemyDef.name} ──`, 'sys');
+  await delay(600);
+
+  const TICKS = 12;
+  for (let t = 1; t <= TICKS && pH > 0 && eH > 0; t++) {
+    await delay(580);
+
+    const pRaw = pTotalDmg + rnd(-4, 5);
+    const eRaw = eTotalDmg + rnd(-4, 5);
+    const pDmg = Math.max(1, pRaw - eArmor);
+    const eDmg = Math.max(1, eRaw - pArmor);
+
+    eH = Math.max(0, eH - pDmg);
+    pH = Math.max(0, pH - eDmg);
+    battleDmgDealt += pDmg;
+    battleDmgTaken += eDmg;
+
+    // Tick 3: healing
+    if (t === 3) {
+      for (const h of pHealItems) {
+        const amt = alchDouble ? h._heal * 2 : h._heal;
+        pH = Math.min(pMax, pH + amt);
+        battleHealed += amt;
+        bLog(`🧪 ${h.name || 'Зелье'} лечит +${amt} HP!`, 'heal');
+      }
+      for (const h of eHealItems) {
+        eH = Math.min(eMax, eH + h._heal);
+        bLog(`🧪 ИИ восстанавливает +${h._heal} HP!`, 'dmg');
+      }
+    }
+
+    const isCrit = pDmg >= pTotalDmg * 0.95 && pDmg > 20;
+    bLog(`Ход ${t}:  ты → ${pDmg} урона${eArmor > 0 ? ` (−${eArmor} бр.)` : ''}   |   ИИ → ${eDmg} урона${pArmor > 0 ? ` (−${pArmor} бр.)` : ''}`, isCrit ? 'crit' : 'dmg');
+
+    updateHP(pH, pMax, eH, eMax);
+
+    if (pDmg > eTotalDmg * 0.8) flashPanel('col-enemy', 'flash-gold');
+    if (eDmg > pTotalDmg * 0.7)  flashPanel('col-player', 'flash-red');
+  }
+
+  await delay(500);
+  endBattle(pH, eH, pMax, eMax, enemyDef.name);
+}
+
+function endBattle(pH, eH, pMax, eMax, enemyName) {
+  inBattle = false;
+  document.getElementById('battle-screen').classList.remove('in-battle');
+
+  const win  = eH <= 0 && pH > 0;
+  const draw = eH <= 0 && pH <= 0;
+
+  // Update persistent state
+  state.pHP  = Math.max(15, pH);
+  state.eHP  = state.eMaxHP;
+  const reward = 4 + Math.floor(state.round * 1.5);
+  state.gold += reward;
+  state.totalDmgDealt  = (state.totalDmgDealt  || 0) + battleDmgDealt;
+  state.totalDmgTaken  = (state.totalDmgTaken  || 0) + battleDmgTaken;
+  state.totalHealed    = (state.totalHealed    || 0) + battleHealed;
+  if (win || draw) state.wins++; else state.losses++;
+
+  // Roll new shop for next round
+  state.round++;
+  state.shop = rollShopItems([], state.frozen);
+  state.frozen = false;
+  persist();
+
+  // Show result
+  const ov = document.getElementById('ov-result');
+  document.getElementById('r-icon').textContent  = draw ? '🤝' : win ? '🏆' : '💀';
+  const title = document.getElementById('r-title');
+  title.textContent = draw ? 'Ничья!' : win ? 'Победа!' : 'Поражение';
+  title.className   = 'm-title' + ((!win && !draw) ? ' lose' : '');
+  document.getElementById('r-sub').textContent   = win
+    ? `${enemyName} повержен!`
+    : draw ? 'Обе башни пали в пыль...'
+    : `${enemyName} одержал верх.`;
+
+  document.getElementById('r-dealt').textContent  = battleDmgDealt;
+  document.getElementById('r-taken').textContent  = battleDmgTaken;
+  document.getElementById('r-healed').textContent = battleHealed;
+  document.getElementById('r-reward').textContent = `+${reward} 🪙`;
+
+  ov.classList.add('show');
+}
+
+// ─── UI helpers ──────────────────────────────────────────────────
+function updateHP(pH, pMax, eH, eMax) {
+  document.getElementById('p-bar').style.width    = Math.max(0, pH / pMax * 100) + '%';
+  document.getElementById('e-bar').style.width    = Math.max(0, eH / eMax * 100) + '%';
+  document.getElementById('p-hp-num').textContent = `${Math.max(0, Math.round(pH))} / ${pMax}`;
+  document.getElementById('e-hp-num').textContent = `${Math.max(0, Math.round(eH))} / ${eMax}`;
+}
+
+function flashPanel(id, cls) {
+  const el = document.getElementById(id);
+  el.classList.remove(cls);
+  void el.offsetWidth;
+  el.classList.add(cls);
+  setTimeout(() => el.classList.remove(cls), 480);
+}
+
+function bLog(msg, cls = '') {
+  const b = document.getElementById('blog');
+  const d = document.createElement('div');
+  d.className = 'log-line ' + cls;
+  d.textContent = msg;
+  b.appendChild(d);
+  b.scrollTop = b.scrollHeight;
+}
+
+function goMenu() {
+  if (inBattle) return; // prevent leaving mid-battle
+  navigate('main.html');
+}
+
+function goShop() {
+  document.getElementById('ov-result').classList.remove('show');
+  navigate('shop.html');
+}
+
+function persist() {
+  const toSave = {
+    ...state,
+    playerTower: dehydrateTower(state.playerTower),
+    shop:        dehydrateShop(state.shop),
+    savedAt:     Date.now(),
+  };
+  saveState(toSave);
+}
+
+init();
+</script>
 </body>
 </html>
