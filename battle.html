@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Battle - Tower of Cards</title>
+    <link rel="stylesheet" href="battle.css">
+</head>
+<body>
+    <div id="battleScreen">
+        <div class="battle-header">
+            <div class="hp-bar-container">
+                <div class="hp-label">🛡️ Герой</div>
+                <div class="hp-bar"><div class="hp-fill player-hp" id="playerHpBar"></div></div> 
+                <div class="hp-text" id="playerHpText">100 / 100</div>
+            </div>
+            <div class="dps-counter">
+                <div class="dps-value" id="dpsValue">0</div>
+                <div class="dps-label">DPS</div>
+            </div>
+            <div class="hp-bar-container" style="align-items:flex-end">
+                <div class="hp-label">💀 Враг</div>
+                <div class="hp-bar"><div class="hp-fill enemy-hp" id="enemyHpBar"></div></div>
+                <div class="hp-text" id="enemyHpText">100 / 100</div>
+            </div>
+        </div>
+
+        <div class="battle-field">
+            <div class="backpack-panel">
+                <div class="backpack-title">🎒 Рюкзак</div>
+                <div class="backpack-grid" id="backpackGrid"></div>
+                <div id="synergyList"></div>
+            </div>
+            <div class="enemy-zone">
+                <div class="enemy-card-display">
+                    <div class="enemy-icon" id="enemyIcon">👹</div>
+                    <div class="enemy-name" id="enemyName">Гоблин</div>
+                </div>
+                <div class="battle-log" id="battleLog"></div>
+            </div>
+        </div>
+
+        <div class="battle-controls">
+            <button class="battle-btn btn-start" id="startBtn" onclick="startBattle()">В БОЙ!</button>
+            <button class="battle-btn" onclick="location.href='main.html'">В МЕНЮ</button>
+        </div>
+    </div>
+    <!-- Скрипты лучше вынести в отдельный файл logic.js, но для примера оставим логику сохранения тут -->
+    <script src="gameLogic.js"></script>
+</body>
+</html>

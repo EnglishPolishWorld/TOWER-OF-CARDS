@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Shop - Tower of Cards</title>
+    <link rel="stylesheet" href="shop.css">
+</head>
+<body>
+    <div id="shopScreen">
+        <h1 class="shop-title">🏪 ТАВЕРНА</h1>
+        <div class="gold-display" id="shopGold">💰 Золото: 0</div>
+        <div class="shop-cards" id="shopCards">
+            <!-- Карты генерируются JS -->
+        </div>
+        <button class="next-btn" onclick="saveAndGoToBattle()">ПРОДОЛЖИТЬ ПУТЬ</button>
+    </div>
+
+    <script src="gameLogic.js"></script>
+    <script>
+        // Инициализация магазина при загрузке
+        window.onload = () => {
+            loadGame();
+            renderShop();
+            document.getElementById('shopGold').textContent = `💰 Золото: ${gameState.gold}`;
+        };
+
+        function saveAndGoToBattle() {
+            saveGame();
+            window.location.href = 'battle.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Tower of Cards - Menu</title>
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+    <div id="mainMenu" class="screen">
+        <div class="game-title">⚔️ TOWER OF CARDS</div>
+        <button class="menu-btn" onclick="newGame()">▶ НОВАЯ ИГРА</button>
+        <button class="menu-btn" id="continueBtn" onclick="continueGame()" style="display:none">📜 ПРОДОЛЖИТЬ</button>
+    </div>
+
+    <script>
+        // Проверка наличия сохранения
+        const save = localStorage.getItem('towerCardsSave');
+        if (save) {
+            document.getElementById('continueBtn').style.display = 'block';
+        }
+
+        function newGame() {
+            localStorage.removeItem('towerCardsSave');
+            window.location.href = 'battle.html';
+        }
+
+        function continueGame() {
+            window.location.href = 'battle.html';
+        }
+    </script>
+</body>
+</html>

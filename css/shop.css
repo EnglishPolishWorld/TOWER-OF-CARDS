@@ -1,0 +1,9 @@
+body { background: #0d1a0a; color: #c9a227; text-align: center; font-family: serif; }
+.gold-count { font-size: 24px; margin: 20px; color: #f1c40f; }
+.shop-items { display: flex; justify-content: center; gap: 20px; }
+.item-card { 
+    width: 100px; padding: 20px; border: 2px solid #c9a227; 
+    background: #1a2e1a; cursor: pointer; transition: 0.3s;
+}
+.item-card:hover { background: #2d4e2d; }
+.btn-next { margin-top: 50px; padding: 15px 40px; background: #c9a227; color: black; border: none; cursor: pointer; }
