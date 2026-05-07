@@ -1,9 +1,95 @@
-body { background: #0d1a0a; color: #c9a227; text-align: center; font-family: serif; }
-.gold-count { font-size: 24px; margin: 20px; color: #f1c40f; }
-.shop-items { display: flex; justify-content: center; gap: 20px; }
-.item-card { 
-    width: 100px; padding: 20px; border: 2px solid #c9a227; 
-    background: #1a2e1a; cursor: pointer; transition: 0.3s;
+/* Основной фон магазина */
+body {
+    background: #0d1a0a;
+    color: #e8d5b7;
+    font-family: 'Georgia', serif;
+    text-align: center;
+    padding: 40px 20px;
 }
-.item-card:hover { background: #2d4e2d; }
-.btn-next { margin-top: 50px; padding: 15px 40px; background: #c9a227; color: black; border: none; cursor: pointer; }
+
+.shop-title {
+    font-size: 48px;
+    color: #c9a227;
+    text-shadow: 0 0 20px rgba(201, 162, 39, 0.4);
+    margin-bottom: 10px;
+}
+
+.gold-display {
+    font-size: 24px;
+    color: #f1c40f;
+    margin-bottom: 30px;
+    font-weight: bold;
+}
+
+/* Контейнер для карт */
+.shop-cards {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+}
+
+/* Стили самой карточки */
+.shop-card-item {
+    width: 160px;
+    height: 220px;
+    background: linear-gradient(135deg, #2c3e50, #000);
+    border: 3px solid #888;
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.3s, box-shadow 0.3s;
+    position: relative;
+}
+
+.shop-card-item:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    border-color: #f1c40f;
+}
+
+.shop-card-icon { font-size: 40px; }
+.shop-card-name { font-weight: bold; font-size: 16px; color: #fff; }
+.shop-card-stats { font-size: 12px; color: #aaa; }
+
+/* Цена под картой */
+.shop-card-price {
+    background: #f1c40f;
+    color: #000;
+    padding: 5px 0;
+    border-radius: 20px;
+    margin-top: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.shop-card-price:hover { background: #fff; }
+.shop-card-price.disabled { background: #555; color: #888; cursor: not-allowed; }
+
+/* Кнопка продолжения */
+.next-btn {
+    padding: 15px 50px;
+    font-size: 20px;
+    background: #2ecc71;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+    transition: 0.3s;
+}
+
+.next-btn:hover {
+    background: #27ae60;
+    transform: scale(1.05);
+}
+
+/* Редкости карт */
+.rarity-common { border-color: #888; }
+.rarity-rare { border-color: #2980b9; box-shadow: 0 0 10px rgba(41, 128, 185, 0.5); }
+.rarity-epic { border-color: #8e44ad; box-shadow: 0 0 15px rgba(142, 68, 173, 0.6); }
+.rarity-legendary { border-color: #f39c12; box-shadow: 0 0 20px rgba(243, 156, 18, 0.8); }
